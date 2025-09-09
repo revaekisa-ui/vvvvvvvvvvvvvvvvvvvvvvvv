@@ -35,8 +35,6 @@ import PromoCodes from './components/PromoCodes';
 import SOPManagement from './components/SOP';
 import Homepage from './components/Homepage';
 
-const USE_SUPABASE = Boolean((import.meta as any)?.env?.VITE_SUPABASE_URL);
-
 // Simple debounce hook to avoid spamming Supabase on rapid state changes
 function useDebouncedEffect(effect: () => void | Promise<void>, deps: any[], delay = 400) {
   const timeoutRef = useRef<number | undefined>(undefined);
@@ -52,37 +50,6 @@ function useDebouncedEffect(effect: () => void | Promise<void>, deps: any[], del
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
-
-const usePersistentState = <T,>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
-    if (USE_SUPABASE) {
-        // When Supabase is enabled, do not persist to localStorage
-        const [state, setState] = useState<T>(defaultValue);
-        return [state, setState];
-    }
-    const [state, setState] = useState<T>(() => {
-        try {
-            const storedValue = window.localStorage.getItem(key);
-            if (storedValue) {
-                return JSON.parse(storedValue);
-            }
-            window.localStorage.setItem(key, JSON.stringify(defaultValue));
-            return defaultValue;
-        } catch (error) {
-            console.warn(`Error reading localStorage key "${key}":`, error);
-            return defaultValue;
-        }
-    });
-
-    useEffect(() => {
-        try {
-            window.localStorage.setItem(key, JSON.stringify(state));
-        } catch (error) {
-            console.warn(`Error setting localStorage key "${key}":`, error);
-        }
-    }, [key, state]);
-
-    return [state, setState];
-};
 
 const AccessDenied: React.FC<{onBackToDashboard: () => void}> = ({ onBackToDashboard }) => (
     <div className="
@@ -222,8 +189,8 @@ const BottomNavBar: React.FC<{ activeView: ViewType; handleNavigation: (view: Vi
 };
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = usePersistentState<boolean>('vena-isAuthenticated', false);
-  const [currentUser, setCurrentUser] = usePersistentState<User | null>('vena-currentUser', null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeView, setActiveView] = useState<ViewType>(ViewType.HOMEPAGE);
   const [notification, setNotification] = useState<string>('');
   const [initialAction, setInitialAction] = useState<NavigationAction | null>(null);
@@ -231,29 +198,28 @@ const App: React.FC = () => {
   const [route, setRoute] = useState(window.location.hash || '#/home');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // --- State Initialization with Persistence ---
-  const [users, setUsers] = usePersistentState<User[]>('vena-users', USE_SUPABASE ? [] as User[] : [] as User[]);
-
-  const [clients, setClients] = usePersistentState<Client[]>('vena-clients', USE_SUPABASE ? [] as Client[] : [] as Client[]);
-  const [projects, setProjects] = usePersistentState<Project[]>('vena-projects', USE_SUPABASE ? [] as Project[] : [] as Project[]);
-  const [teamMembers, setTeamMembers] = usePersistentState<TeamMember[]>('vena-teamMembers', USE_SUPABASE ? [] as TeamMember[] : [] as TeamMember[]);
-  const [transactions, setTransactions] = usePersistentState<Transaction[]>('vena-transactions', USE_SUPABASE ? [] as Transaction[] : [] as Transaction[]);
-  const [teamProjectPayments, setTeamProjectPayments] = usePersistentState<TeamProjectPayment[]>('vena-teamProjectPayments', USE_SUPABASE ? [] as TeamProjectPayment[] : [] as TeamProjectPayment[]);
-  const [teamPaymentRecords, setTeamPaymentRecords] = usePersistentState<TeamPaymentRecord[]>('vena-teamPaymentRecords', USE_SUPABASE ? [] as TeamPaymentRecord[] : [] as TeamPaymentRecord[]);
-  const [pockets, setPockets] = usePersistentState<FinancialPocket[]>('vena-pockets', USE_SUPABASE ? [] as FinancialPocket[] : [] as FinancialPocket[]);
-  const [profile, setProfile] = usePersistentState<Profile>('vena-profile', USE_SUPABASE ? JSON.parse(JSON.stringify(DEFAULT_USER_PROFILE)) : JSON.parse(JSON.stringify(DEFAULT_USER_PROFILE)));
-  const [leads, setLeads] = usePersistentState<Lead[]>('vena-leads', USE_SUPABASE ? [] as Lead[] : [] as Lead[]);
-  const [rewardLedgerEntries, setRewardLedgerEntries] = usePersistentState<RewardLedgerEntry[]>('vena-rewardLedgerEntries', USE_SUPABASE ? [] as RewardLedgerEntry[] : [] as RewardLedgerEntry[]);
-  const [cards, setCards] = usePersistentState<Card[]>('vena-cards', USE_SUPABASE ? [] as Card[] : [] as Card[]);
-  const [assets, setAssets] = usePersistentState<Asset[]>('vena-assets', USE_SUPABASE ? [] as Asset[] : [] as Asset[]);
-  const [contracts, setContracts] = usePersistentState<Contract[]>('vena-contracts', USE_SUPABASE ? [] as Contract[] : [] as Contract[]);
-  const [clientFeedback, setClientFeedback] = usePersistentState<ClientFeedback[]>('vena-clientFeedback', USE_SUPABASE ? [] as ClientFeedback[] : [] as ClientFeedback[]);
-  const [notifications, setNotifications] = usePersistentState<Notification[]>('vena-notifications', USE_SUPABASE ? [] as Notification[] : [] as Notification[]);
-  const [socialMediaPosts, setSocialMediaPosts] = usePersistentState<SocialMediaPost[]>('vena-socialMediaPosts', USE_SUPABASE ? [] as SocialMediaPost[] : [] as SocialMediaPost[]);
-  const [promoCodes, setPromoCodes] = usePersistentState<PromoCode[]>('vena-promoCodes', USE_SUPABASE ? [] as PromoCode[] : [] as PromoCode[]);
-  const [sops, setSops] = usePersistentState<SOP[]>('vena-sops', USE_SUPABASE ? [] as SOP[] : [] as SOP[]);
-  const [packages, setPackages] = usePersistentState<Package[]>('vena-packages', USE_SUPABASE ? [] as Package[] : [] as Package[]);
-  const [addOns, setAddOns] = usePersistentState<AddOn[]>('vena-addOns', USE_SUPABASE ? [] as AddOn[] : [] as AddOn[]);
+  // --- State Initialization ---
+  const [users, setUsers] = useState<User[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [teamProjectPayments, setTeamProjectPayments] = useState<TeamProjectPayment[]>([]);
+  const [teamPaymentRecords, setTeamPaymentRecords] = useState<TeamPaymentRecord[]>([]);
+  const [pockets, setPockets] = useState<FinancialPocket[]>([]);
+  const [profile, setProfile] = useState<Profile>(JSON.parse(JSON.stringify(DEFAULT_USER_PROFILE)));
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [rewardLedgerEntries, setRewardLedgerEntries] = useState<RewardLedgerEntry[]>([]);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [clientFeedback, setClientFeedback] = useState<ClientFeedback[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [socialMediaPosts, setSocialMediaPosts] = useState<SocialMediaPost[]>([]);
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+  const [sops, setSops] = useState<SOP[]>([]);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [addOns, setAddOns] = useState<AddOn[]>([]);
 
 
     // --- [NEW] MOCK EMAIL SERVICE ---
@@ -356,7 +322,6 @@ const App: React.FC = () => {
 
   // Sync Supabase auth session to local app auth state
   useEffect(() => {
-    if (!USE_SUPABASE) return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user;
       if (user) {
@@ -392,7 +357,6 @@ const App: React.FC = () => {
   const initialSupabaseLoadDone = useRef(false);
 
   useEffect(() => {
-    if (!USE_SUPABASE) return;
     const toCamel = (s: string) => s.replace(/_[a-z]/g, (g) => g[1].toUpperCase());
     const camelize = (obj: any) => {
       if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
@@ -541,17 +505,11 @@ const App: React.FC = () => {
   };
   
   const handleLogout = () => {
-    if (USE_SUPABASE) {
-        supabase.auth.signOut().finally(() => {
-            setIsAuthenticated(false);
-            setCurrentUser(null);
-            window.location.hash = '#/home';
-        });
-        return;
-    }
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    window.location.hash = '#/home';
+    supabase.auth.signOut().finally(() => {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        window.location.hash = '#/home';
+    });
   };
 
   const handleMarkAsRead = (notificationId: string) => {
@@ -815,7 +773,7 @@ const App: React.FC = () => {
     projects: new Set<string>(),
   });
 
-  const canSync = USE_SUPABASE && isAuthenticated && initialSupabaseLoadDone.current;
+  const canSync = isAuthenticated && initialSupabaseLoadDone.current;
   const lastSyncError = useRef<string | null>(null);
   const notifySyncError = (label: string, e: any) => {
     if (lastSyncError.current !== label) {
