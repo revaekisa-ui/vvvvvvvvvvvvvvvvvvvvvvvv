@@ -61,10 +61,12 @@ before update on public.profiles
 for each row execute procedure public.handle_updated_at();
 
 alter table public.profiles enable row level security;
-create policy "profiles_owner_all"
+create policy "profiles_tenant_access"
   on public.profiles
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- App users (metadata for roles/permissions; authentication handled by auth.users)
 create table if not exists public.app_users (
@@ -83,10 +85,12 @@ before update on public.app_users
 for each row execute procedure public.handle_updated_at();
 
 alter table public.app_users enable row level security;
-create policy "app_users_owner_all"
+create policy "app_users_tenant_access"
   on public.app_users
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Clients
 create table if not exists public.clients (
@@ -110,10 +114,12 @@ before update on public.clients
 for each row execute procedure public.handle_updated_at();
 
 alter table public.clients enable row level security;
-create policy "clients_owner_all"
+create policy "clients_tenant_access"
   on public.clients
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Team members
 create table if not exists public.team_members (
@@ -137,10 +143,12 @@ before update on public.team_members
 for each row execute procedure public.handle_updated_at();
 
 alter table public.team_members enable row level security;
-create policy "team_members_owner_all"
+create policy "team_members_tenant_access"
   on public.team_members
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Packages and Add-ons
 create table if not exists public.packages (
@@ -165,10 +173,12 @@ before update on public.packages
 for each row execute procedure public.handle_updated_at();
 
 alter table public.packages enable row level security;
-create policy "packages_owner_all"
+create policy "packages_tenant_access"
   on public.packages
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 create table if not exists public.add_ons (
   id text primary key,
@@ -183,10 +193,12 @@ before update on public.add_ons
 for each row execute procedure public.handle_updated_at();
 
 alter table public.add_ons enable row level security;
-create policy "add_ons_owner_all"
+create policy "add_ons_tenant_access"
   on public.add_ons
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Cards
 create table if not exists public.cards (
@@ -207,10 +219,12 @@ before update on public.cards
 for each row execute procedure public.handle_updated_at();
 
 alter table public.cards enable row level security;
-create policy "cards_owner_all"
+create policy "cards_tenant_access"
   on public.cards
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Pockets (financial buckets)
 create table if not exists public.pockets (
@@ -233,10 +247,12 @@ before update on public.pockets
 for each row execute procedure public.handle_updated_at();
 
 alter table public.pockets enable row level security;
-create policy "pockets_owner_all"
+create policy "pockets_tenant_access"
   on public.pockets
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Leads
 create table if not exists public.leads (
@@ -257,10 +273,12 @@ before update on public.leads
 for each row execute procedure public.handle_updated_at();
 
 alter table public.leads enable row level security;
-create policy "leads_owner_all"
+create policy "leads_tenant_access"
   on public.leads
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Assets
 create table if not exists public.assets (
@@ -281,10 +299,12 @@ before update on public.assets
 for each row execute procedure public.handle_updated_at();
 
 alter table public.assets enable row level security;
-create policy "assets_owner_all"
+create policy "assets_tenant_access"
   on public.assets
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Projects
 create table if not exists public.projects (
@@ -338,10 +358,12 @@ before update on public.projects
 for each row execute procedure public.handle_updated_at();
 
 alter table public.projects enable row level security;
-create policy "projects_owner_all"
+create policy "projects_tenant_access"
   on public.projects
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Project add-ons (join)
 create table if not exists public.project_add_ons (
@@ -351,10 +373,12 @@ create table if not exists public.project_add_ons (
   primary key (project_id, add_on_id)
 );
 alter table public.project_add_ons enable row level security;
-create policy "project_add_ons_owner_all"
+create policy "project_add_ons_tenant_access"
   on public.project_add_ons
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Project assigned team members (join)
 create table if not exists public.project_team (
@@ -369,10 +393,12 @@ create table if not exists public.project_team (
   primary key (project_id, member_id)
 );
 alter table public.project_team enable row level security;
-create policy "project_team_owner_all"
+create policy "project_team_tenant_access"
   on public.project_team
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Project revisions
 create table if not exists public.project_revisions (
@@ -395,10 +421,12 @@ before update on public.project_revisions
 for each row execute procedure public.handle_updated_at();
 
 alter table public.project_revisions enable row level security;
-create policy "project_revisions_owner_all"
+create policy "project_revisions_tenant_access"
   on public.project_revisions
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Printing items per project
 create table if not exists public.printing_items (
@@ -411,10 +439,12 @@ create table if not exists public.printing_items (
   cost numeric not null default 0
 );
 alter table public.printing_items enable row level security;
-create policy "printing_items_owner_all"
+create policy "printing_items_tenant_access"
   on public.printing_items
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Transactions
 create table if not exists public.transactions (
@@ -439,10 +469,12 @@ before update on public.transactions
 for each row execute procedure public.handle_updated_at();
 
 alter table public.transactions enable row level security;
-create policy "transactions_owner_all"
+create policy "transactions_tenant_access"
   on public.transactions
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Contracts
 create table if not exists public.contracts (
@@ -484,10 +516,12 @@ before update on public.contracts
 for each row execute procedure public.handle_updated_at();
 
 alter table public.contracts enable row level security;
-create policy "contracts_owner_all"
+create policy "contracts_tenant_access"
   on public.contracts
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Team project payments
 create table if not exists public.team_project_payments (
@@ -508,10 +542,12 @@ before update on public.team_project_payments
 for each row execute procedure public.handle_updated_at();
 
 alter table public.team_project_payments enable row level security;
-create policy "team_project_payments_owner_all"
+create policy "team_project_payments_tenant_access"
   on public.team_project_payments
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Team payment records + items
 create table if not exists public.team_payment_records (
@@ -530,10 +566,12 @@ before update on public.team_payment_records
 for each row execute procedure public.handle_updated_at();
 
 alter table public.team_payment_records enable row level security;
-create policy "team_payment_records_owner_all"
+create policy "team_payment_records_tenant_access"
   on public.team_payment_records
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 create table if not exists public.team_payment_record_items (
   record_id text references public.team_payment_records(id) on delete cascade,
@@ -542,10 +580,12 @@ create table if not exists public.team_payment_record_items (
   primary key (record_id, project_payment_id)
 );
 alter table public.team_payment_record_items enable row level security;
-create policy "team_payment_record_items_owner_all"
+create policy "team_payment_record_items_tenant_access"
   on public.team_payment_record_items
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Reward ledger entries
 create table if not exists public.reward_ledger_entries (
@@ -564,10 +604,12 @@ before update on public.reward_ledger_entries
 for each row execute procedure public.handle_updated_at();
 
 alter table public.reward_ledger_entries enable row level security;
-create policy "reward_ledger_entries_owner_all"
+create policy "reward_ledger_entries_tenant_access"
   on public.reward_ledger_entries
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Client feedback
 create table if not exists public.client_feedback (
@@ -586,10 +628,12 @@ before update on public.client_feedback
 for each row execute procedure public.handle_updated_at();
 
 alter table public.client_feedback enable row level security;
-create policy "client_feedback_owner_all"
+create policy "client_feedback_tenant_access"
   on public.client_feedback
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Notifications
 create table if not exists public.notifications (
@@ -609,10 +653,12 @@ before update on public.notifications
 for each row execute procedure public.handle_updated_at();
 
 alter table public.notifications enable row level security;
-create policy "notifications_owner_all"
+create policy "notifications_tenant_access"
   on public.notifications
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Social media posts
 create table if not exists public.social_media_posts (
@@ -635,10 +681,12 @@ before update on public.social_media_posts
 for each row execute procedure public.handle_updated_at();
 
 alter table public.social_media_posts enable row level security;
-create policy "social_media_posts_owner_all"
+create policy "social_media_posts_tenant_access"
   on public.social_media_posts
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- SOPs
 create table if not exists public.sops (
@@ -656,10 +704,12 @@ before update on public.sops
 for each row execute procedure public.handle_updated_at();
 
 alter table public.sops enable row level security;
-create policy "sops_owner_all"
+create policy "sops_tenant_access"
   on public.sops
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
 -- Promo codes
 create table if not exists public.promo_codes (
@@ -680,8 +730,10 @@ before update on public.promo_codes
 for each row execute procedure public.handle_updated_at();
 
 alter table public.promo_codes enable row level security;
-create policy "promo_codes_owner_all"
+create policy "promo_codes_tenant_access"
   on public.promo_codes
-  using (owner_uid = auth.uid())
-  with check (owner_uid = auth.uid());
+  for all
+  to authenticated
+  using ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid)
+  with check ((select owner_uid from public.app_users where id = auth.uid()) = owner_uid);
 
