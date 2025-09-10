@@ -326,7 +326,10 @@ const App: React.FC = () => {
       const user = session?.user;
       if (user) {
         try {
-          const { data: appUser } = await supabase.from('app_users').select('*').eq('id', user.id).maybeSingle();
+          // Fetch app_users metadata first
+          const { data: appUser, error: appUserError } = await supabase.from('app_users').select('*').eq('id', user.id).maybeSingle();
+          if (appUserError) throw appUserError;
+
           const mappedUser: User = {
             id: user.id,
             email: user.email || '',
@@ -338,8 +341,28 @@ const App: React.FC = () => {
           };
           setCurrentUser(mappedUser);
           setIsAuthenticated(true);
+
+          // Now, fetch or create the vendor profile
+          const { data: profileData, error: profileError } = await supabase.from('profiles').select('*').eq('owner_uid', user.id).maybeSingle();
+          if (profileError) throw profileError;
+
+          if (profileData) {
+            setProfile(profileData as Profile);
+          } else {
+            // No profile exists, create one
+            const newProfile: Partial<Profile> = {
+              owner_uid: user.id,
+              email: user.email,
+              fullName: mappedUser.fullName,
+              // Add other default fields if necessary
+            };
+            const { data: createdProfile, error: createError } = await supabase.from('profiles').insert(newProfile).select().single();
+            if (createError) throw createError;
+            if (createdProfile) setProfile(createdProfile as Profile);
+          }
+
         } catch (e) {
-          console.error('[Supabase] Failed to map app user', e);
+          console.error('[Supabase] Failed to initialize user session', e);
           setCurrentUser(null);
           setIsAuthenticated(false);
         }
@@ -876,15 +899,15 @@ supa.syncPosts(socialMediaPosts, prevIds.current.posts).then((s) => (prevIds.cur
 supa.syncProjects(projects, prevIds.current.projects).then((s) => (prevIds.current.projects = s)).catch((e) => notifySyncError('[Supabase] Gagal sinkronisasi: projects', e));
   }, [projects, canSync]);
 
-  // profile (single row)
-  useDebouncedEffect(() => {
-    if (!canSync) return;
-    supa.upsertProfile(profile).then((id) => {
-      if (!profile.id || profile.id.length === 0) {
-        setProfile((prev) => ({ ...prev, id }));
-      }
-}).catch((e) => notifySyncError('[Supabase] Gagal sinkronisasi: profile', e));
-  }, [profile, canSync]);
+  // profile (single row) - This is now handled in the onAuthStateChange effect
+  // useDebouncedEffect(() => {
+  //   if (!canSync) return;
+  //   supa.upsertProfile(profile).then((id) => {
+  //     if (!profile.id || profile.id.length === 0) {
+  //       setProfile((prev) => ({ ...prev, id }));
+  //     }
+  //   }).catch((e) => notifySyncError('[Supabase] Gagal sinkronisasi: profile', e));
+  // }, [profile, canSync]);
 
   // --- ROUTING LOGIC ---
   if (route.startsWith('#/home') || route === '#/') return <Homepage />;
